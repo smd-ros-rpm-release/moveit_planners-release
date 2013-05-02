@@ -44,6 +44,9 @@
 namespace ompl_interface
 {
 
+typedef boost::function<bool(const ompl::base::State *from, const ompl::base::State *to, const double t, ompl::base::State *state)> InterpolationFunction;
+typedef boost::function<double(const ompl::base::State *state1, const ompl::base::State *state2)> DistanceFunction;
+
 struct ModelBasedStateSpaceSpecification
 {
   ModelBasedStateSpaceSpecification(const robot_model::RobotModelConstPtr &kmodel,
@@ -164,13 +167,27 @@ public:
   ModelBasedStateSpace(const ModelBasedStateSpaceSpecification &spec);  
   virtual ~ModelBasedStateSpace();
 
+  void setInterpolationFunction(const InterpolationFunction &fun)
+  {
+    interpolation_function_ = fun;
+  }
+  
+  void setDistanceFunction(const DistanceFunction &fun)
+  {
+    distance_function_ = fun;
+  }
+  
   virtual ompl::base::State* allocState() const;
   virtual void freeState(ompl::base::State *state) const;
   virtual void copyState(ompl::base::State *destination, const ompl::base::State *source) const;
   virtual void interpolate(const ompl::base::State *from, const ompl::base::State *to, const double t, ompl::base::State *state) const;
   virtual double distance(const ompl::base::State *state1, const ompl::base::State *state2) const;
   virtual double getMaximumExtent() const;
-  
+
+  virtual unsigned int getSerializationLength() const;
+  virtual void serialize(void *serialization, const ompl::base::State *state) const;
+  virtual void deserialize(ompl::base::State *state, const void *serialization) const;
+
   virtual ompl::base::StateSamplerPtr allocStateSampler() const;  
   virtual ompl::base::StateSamplerPtr allocSubspaceStateSampler(const ompl::base::StateSpace *subspace) const;
 
@@ -235,6 +252,9 @@ protected:
   
   ModelBasedStateSpaceSpecification spec_; 
   unsigned int jointSubspaceCount_;
+  
+  InterpolationFunction interpolation_function_;
+  DistanceFunction distance_function_;
   
   double tag_snap_to_segment_;
   double tag_snap_to_segment_complement_;
