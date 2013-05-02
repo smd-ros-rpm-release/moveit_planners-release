@@ -40,31 +40,26 @@
 #include <moveit/ompl_interface/planning_context_manager.h>
 #include <moveit/kinematic_constraints/kinematic_constraint.h>
 #include <ompl/base/StateStorage.h>
-#include <visualization_msgs/MarkerArray.h>
 #include <boost/function.hpp>
+#include <boost/serialization/map.hpp>
 
 namespace ompl_interface
 {
 
-typedef ompl::base::StateStorageWithMetadata< std::vector<std::size_t> > ConstraintApproximationStateStorage;
-typedef boost::function<bool(const ompl::base::State*, const ompl::base::State*)> ConstraintStateStorageOrderFn;
-typedef boost::function<bool(const ompl::base::State*)> ConstraintStateStorageDelimiterFn;
+typedef std::pair<std::vector<std::size_t>, std::map<std::size_t, std::pair<std::size_t, std::size_t> > > ConstrainedStateMetadata;
+typedef ompl::base::StateStorageWithMetadata<ConstrainedStateMetadata> ConstraintApproximationStateStorage;
 
 class ConstraintApproximation;
 typedef boost::shared_ptr<ConstraintApproximation> ConstraintApproximationPtr;
 typedef boost::shared_ptr<const ConstraintApproximation> ConstraintApproximationConstPtr;
 
-class ConstraintApproximationFactory;
-typedef boost::shared_ptr<ConstraintApproximationFactory> ConstraintApproximationFactoryPtr;
-typedef boost::shared_ptr<const ConstraintApproximationFactory> ConstraintApproximationFactoryConstPtr;
-
 class ConstraintApproximation
 {
 public:
   
-  ConstraintApproximation(const robot_model::RobotModelConstPtr &kinematic_model, const std::string &group, const std::string &state_space_parameterization,
-                          const moveit_msgs::Constraints &msg, const std::string &filename, const ompl::base::StateStoragePtr &storage, 
-                          const ConstraintApproximationFactory *parent_factory = NULL);
+  ConstraintApproximation(const std::string &group, const std::string &state_space_parameterization, bool explicit_motions,
+                          const moveit_msgs::Constraints &msg, const std::string &filename, const ompl::base::StateStoragePtr &storage,
+                          std::size_t milestones = 0);
   
   virtual ~ConstraintApproximation()
   {
@@ -75,7 +70,9 @@ public:
     return constraint_msg_.name;
   }
   
-  virtual ompl::base::StateSamplerAllocator getStateSamplerAllocator(const moveit_msgs::Constraints &msg) const;
+  ompl::base::StateSamplerAllocator getStateSamplerAllocator(const moveit_msgs::Constraints &msg) const;
+  
+  InterpolationFunction getInterpolationFunction() const;
   
   const std::vector<int>& getSpaceSignature() const
   {
@@ -86,6 +83,16 @@ public:
   {
     return group_;
   }  
+  
+  bool hasExplicitMotions() const
+  {
+    return explicit_motions_;
+  }
+  
+  std::size_t getMilestoneCount() const
+  {
+    return milestones_;
+  }
   
   const std::string& getStateSpaceParameterization() const
   {
@@ -106,75 +113,48 @@ public:
   {
     return ompldb_filename_;
   }  
-
-  void visualizeDistribution(const std::string &link_name, unsigned int count, visualization_msgs::MarkerArray &arr) const;
   
 protected:
   
-  robot_model::RobotModelConstPtr          kmodel_;
-  std::string                                      group_;
-  std::string                                      state_space_parameterization_;
-
-  moveit_msgs::Constraints                         constraint_msg_;
+  std::string group_;
+  std::string state_space_parameterization_;
+  bool explicit_motions_;
   
-  std::vector<int>                                 space_signature_;
+  moveit_msgs::Constraints constraint_msg_;
   
-  std::string                                      ompldb_filename_;
-  ompl::base::StateStoragePtr                      state_storage_ptr_;
-  ConstraintApproximationStateStorage             *state_storage_;
+  std::vector<int> space_signature_;
   
-  const ConstraintApproximationFactory            *parent_factory_;
+  std::string ompldb_filename_;
+  ompl::base::StateStoragePtr state_storage_ptr_;
+  ConstraintApproximationStateStorage *state_storage_;
+  std::size_t milestones_;
 };
 
-class ConstraintApproximationFactory
+struct ConstraintApproximationConstructionOptions
 {
-public:
-  ConstraintApproximationFactory()
+  ConstraintApproximationConstructionOptions() :
+    samples(0),
+    edges_per_sample(0),
+    max_edge_length(std::numeric_limits<double>::infinity()),
+    explicit_motions(false),
+    explicit_points_resolution(0.0),
+    max_explicit_points(0)
   {
   }
   
-  virtual ~ConstraintApproximationFactory()
-  {
-  }
-  
-  virtual ConstraintStateStorageOrderFn getOrderFunction() const
-  {
-    return ConstraintStateStorageOrderFn();    
-  }
-
-  virtual ConstraintStateStorageDelimiterFn getAboveDelimiterFunction(const moveit_msgs::Constraints &msg) const
-  {
-    return ConstraintStateStorageDelimiterFn();
-  }
-  
-  virtual ConstraintStateStorageDelimiterFn getBelowDelimiterFunction(const moveit_msgs::Constraints &msg) const
-  {
-    return ConstraintStateStorageDelimiterFn();
-  }  
-  
-  virtual ConstraintApproximationPtr allocApproximation(const robot_model::RobotModelConstPtr &kinematic_model,
-                                                        const std::string &group, const std::string &state_space_parameterization,
-                                                        const moveit_msgs::Constraints &msg, const std::string &filename,
-                                                        const ompl::base::StateStoragePtr &storage) const = 0;
-};
-
-template<typename C>
-class SpecialConstraintApproximationFactory : public ConstraintApproximationFactory
-{
-public:
-  
-  virtual ConstraintApproximationPtr allocApproximation(const robot_model::RobotModelConstPtr &kinematic_model,
-                                                        const std::string &group, const std::string &state_space_parameterization,
-                                                        const moveit_msgs::Constraints &msg, std::string &filename,
-                                                        const ompl::base::StateStoragePtr &storage) const
-  {
-    return ConstraintApproximationPtr(new C(kinematic_model, group, state_space_parameterization, msg, filename, storage, this));
-  }
+  std::string state_space_parameterization;
+  unsigned int samples;
+  unsigned int edges_per_sample;
+  double max_edge_length;
+  bool explicit_motions;
+  double explicit_points_resolution;
+  unsigned int max_explicit_points;
 };
 
 struct ConstraintApproximationConstructionResults
 {
   ConstraintApproximationPtr approx;
+  std::size_t                milestones;
   double                     state_sampling_time;
   double                     state_connection_time;
   double                     sampling_success_rate;
@@ -194,15 +174,13 @@ public:
   
   ConstraintApproximationConstructionResults
   addConstraintApproximation(const moveit_msgs::Constraints &constr_sampling, const moveit_msgs::Constraints &constr_hard,
-                             const std::string &group, const std::string &state_space_parameterization,
-                             const planning_scene::PlanningSceneConstPtr &scene, 
-                             unsigned int samples, unsigned int edges_per_sample);
+                             const std::string &group, const planning_scene::PlanningSceneConstPtr &scene, 
+                             const ConstraintApproximationConstructionOptions &options);
   
   ConstraintApproximationConstructionResults
   addConstraintApproximation(const moveit_msgs::Constraints &constr,
-                             const std::string &group, const std::string &state_space_parameterization,
-                             const planning_scene::PlanningSceneConstPtr &scene, 
-                             unsigned int samples, unsigned int edges_per_sample);
+                             const std::string &group, const planning_scene::PlanningSceneConstPtr &scene, 
+                             const ConstraintApproximationConstructionOptions &options);
   
   void printConstraintApproximations(std::ostream &out = std::cout) const;
   void clearConstraintApproximations();
@@ -212,26 +190,17 @@ public:
     constraint_approximations_[approx->getName()] = approx;
   }
   
-  template<typename C>
-  void registerConstraintApproximationFactory(const std::string &name)
-  {
-    constraint_factories_[name] = new SpecialConstraintApproximationFactory<C>(name);
-  }
-  
   const ConstraintApproximationPtr& getConstraintApproximation(const moveit_msgs::Constraints &msg) const;
   
 private:
   
   ompl::base::StateStoragePtr constructConstraintApproximation(const ModelBasedPlanningContextPtr &pcontext,
-                                                               const moveit_msgs::Constraints &constr_sampling,
-                                                               const moveit_msgs::Constraints &constr_hard,
-                                                               const ConstraintStateStorageOrderFn &order,
-                                                               unsigned int samples, unsigned int edges_per_sample,
+                                                               const moveit_msgs::Constraints &constr_sampling, const moveit_msgs::Constraints &constr_hard,
+                                                               const ConstraintApproximationConstructionOptions &options,
                                                                ConstraintApproximationConstructionResults &result);
   
   const PlanningContextManager &context_manager_;
   std::map<std::string, ConstraintApproximationPtr> constraint_approximations_;
-  std::map<std::string, ConstraintApproximationFactoryPtr> constraint_factories_;
 
 };
 

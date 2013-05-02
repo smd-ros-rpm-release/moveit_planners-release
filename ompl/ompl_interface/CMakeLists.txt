@@ -20,7 +20,6 @@ add_library(${MOVEIT_LIB_NAME}
   src/detail/constrained_valid_state_sampler.cpp
   src/detail/constrained_goal_sampler.cpp
   src/detail/ompl_console.cpp
-  src/ompl_interface_ros.cpp
 )
 
 find_package(OpenMP)
@@ -36,6 +35,10 @@ set_target_properties(test_state_space PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS
 add_executable(moveit_ompl_planner src/ompl_planner.cpp)
 target_link_libraries(moveit_ompl_planner ${MOVEIT_LIB_NAME})
 set_target_properties(moveit_ompl_planner PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
+
+add_executable(moveit_demo_construct_constraints_database src/demo_construct_state_database.cpp)
+target_link_libraries(moveit_demo_construct_constraints_database ${MOVEIT_LIB_NAME})
+set_target_properties(moveit_demo_construct_constraints_database PROPERTIES LINK_FLAGS "${OpenMP_CXX_FLAGS}")
 
 add_library(moveit_ompl_planner_plugin src/ompl_plugin.cpp)
 target_link_libraries(moveit_ompl_planner_plugin ${MOVEIT_LIB_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
