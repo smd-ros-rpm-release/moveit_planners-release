@@ -36,12 +36,13 @@
 
 #include <moveit/ompl_interface/parameterization/work_space/pose_model_state_space.h>
 #include <ompl/base/spaces/SE3StateSpace.h>
-#include <ompl/tools/debug/Profiler.h>
+#include <moveit/profiler/profiler.h>
 
 const std::string ompl_interface::PoseModelStateSpace::PARAMETERIZATION_TYPE = "PoseModel";
 
 ompl_interface::PoseModelStateSpace::PoseModelStateSpace(const ModelBasedStateSpaceSpecification &spec) : ModelBasedStateSpace(spec)
 {
+  jump_factor_ = 3;
   const std::pair<robot_model::SolverAllocatorFn, robot_model::SolverAllocatorMapFn>& slv = spec.joint_model_group_->getSolverAllocators();
   if (slv.first)
     poses_.push_back(PoseComponent(spec.joint_model_group_));
@@ -114,21 +115,42 @@ void ompl_interface::PoseModelStateSpace::sanityChecks() const
 }
 
 void ompl_interface::PoseModelStateSpace::interpolate(const ompl::base::State *from, const ompl::base::State *to, const double t, ompl::base::State *state) const
-{    
+{
+  //  moveit::Profiler::ScopedBlock sblock("interpolate");
+
   // we want to interpolate in Cartesian space; we do not have a guarantee that from and to
   // have their poses computed, but this is very unlikely to happen (depends how the planner gets its input states)
   ModelBasedStateSpace::interpolate(from, to, t, state);
+  
+  // the call above may reset all flags for state; but we know the pose we want flag should be set
+  state->as<StateType>()->setPoseComputed(true);
+
   /*
-  std::cout << "X\n";
+  std::cout << "*********** interpolate\n";
   printState(from, std::cout);
   printState(to, std::cout);
   printState(state, std::cout);
+  std::cout << "\n\n";
   */
+
   // after interpolation we cannot be sure about the joint values (we use them as seed only)
-  // so we recompute IK
-  state->as<StateType>()->setJointsComputed(false);
-  state->as<StateType>()->setPoseComputed(true);
-  computeStateIK(state);
+  // so we recompute IK if needed 
+  if (computeStateIK(state))
+  {
+    for (unsigned int i = 0 ; i < jointSubspaceCount_ ; ++i)
+    {
+      double dj = jump_factor_ * components_[i]->distance(from->as<StateType>()->components[i], to->as<StateType>()->components[i]);
+      double d_from = components_[i]->distance(from->as<StateType>()->components[i], state->as<StateType>()->components[i]);
+      double d_to = components_[i]->distance(state->as<StateType>()->components[i], to->as<StateType>()->components[i]);
+
+      // if the joint value jumped too much
+      if (d_from + d_to > std::max(0.2, dj))
+      {
+	state->as<StateType>()->markInvalid();
+	break;
+      }
+    }
+  }
 }
 
 void ompl_interface::PoseModelStateSpace::setPlanningVolume(double minX, double maxX, double minY, double maxY, double minZ, double maxZ)
@@ -195,6 +217,7 @@ bool ompl_interface::PoseModelStateSpace::PoseComponent::computeStateIK(const om
     for (unsigned int j = 0 ; j < joint_val_count_[i] ; ++j)
       seed_values[vindex++] = v[j];
   }
+
   /*
   std::cout << "seed: ";
   for (std::size_t i = 0 ; i < seed_values.size() ; ++i)
@@ -216,9 +239,13 @@ bool ompl_interface::PoseModelStateSpace::PoseComponent::computeStateIK(const om
   
   // run IK
   std::vector<double> solution;
-  moveit_msgs::MoveItErrorCodes dummy;
-  if (!kinematics_solver_->getPositionIK(pose, seed_values, solution, dummy))
-    return false;
+  moveit_msgs::MoveItErrorCodes err_code;
+  if (!kinematics_solver_->getPositionIK(pose, seed_values, solution, err_code))
+  {
+    if (err_code.val != moveit_msgs::MoveItErrorCodes::TIMED_OUT ||
+	!kinematics_solver_->searchPositionIK(pose, seed_values, kinematics_solver_->getDefaultTimeout() * 2.0, solution, err_code))
+      return false;
+  }
   
   // copy solution to the joint state 
   vindex = 0;
