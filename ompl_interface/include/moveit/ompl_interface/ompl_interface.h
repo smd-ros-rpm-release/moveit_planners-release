@@ -56,25 +56,28 @@ namespace ompl_interface
  *  This class defines the interface to the motion planners in OMPL*/
 class OMPLInterface
 {
-public: 
-  
+public:
+
+  /** \brief Initialize OMPL-based planning for a particular robot model. ROS configuration is read from the specified NodeHandle */
   OMPLInterface(const robot_model::RobotModelConstPtr &kmodel, const ros::NodeHandle &nh = ros::NodeHandle("~"));
+
+  /** \brief Initialize OMPL-based planning for a particular robot model. ROS configuration is read from the specified NodeHandle. However,
+      planner configurations are used as specified in \e pconfig instead of reading them from the ROS parameter server */
+  OMPLInterface(const robot_model::RobotModelConstPtr &kmodel, const planning_interface::PlannerConfigurationMap &pconfig, const ros::NodeHandle &nh = ros::NodeHandle("~"));
+
   virtual ~OMPLInterface();
-  
+
   /** @brief Specify configurations for the planners.
       @param pconfig Configurations for the different planners */
-  void setPlanningConfigurations(const PlanningConfigurationMap &pconfig)
-  {
-    context_manager_.setPlanningConfigurations(pconfig);
-  }
+  void setPlannerConfigurations(const planning_interface::PlannerConfigurationMap &pconfig);
 
   /** @brief Get the configurations for the planners that are already loaded
       @param pconfig Configurations for the different planners */
-  const PlanningConfigurationMap& getPlanningConfigurations()
+  const planning_interface::PlannerConfigurationMap& getPlannerConfigurations() const
   {
-    return context_manager_.getPlanningConfigurations();
+    return context_manager_.getPlannerConfigurations();
   }
-  
+
   /** @brief Solve the planning problem */
   bool solve(const planning_scene::PlanningSceneConstPtr& planning_scene,
              const planning_interface::MotionPlanRequest &req, planning_interface::MotionPlanResponse &res) const;
@@ -82,29 +85,25 @@ public:
   /** @brief Solve the planning problem but give a more detailed response */
   bool solve(const planning_scene::PlanningSceneConstPtr& planning_scene,
              const planning_interface::MotionPlanRequest &req, planning_interface::MotionPlanDetailedResponse &res) const;
-  
-  /** @brief Benchmark the planning problem*/
-  /*
-  bool benchmark(const planning_scene::PlanningSceneConstPtr& planning_scene,
-                 const moveit_msgs::BenchmarkPluginRequest &req,                  
-                 moveit_msgs::BenchmarkPluginResponse &res) const;
-  */
-  
-  void terminateSolve();
 
-  ModelBasedPlanningContextPtr getPlanningContext(const planning_interface::MotionPlanRequest &req) const;
+  ModelBasedPlanningContextPtr getPlanningContext(const planning_scene::PlanningSceneConstPtr& planning_scene,
+                                                  const planning_interface::MotionPlanRequest &req) const;
+  ModelBasedPlanningContextPtr getPlanningContext(const planning_scene::PlanningSceneConstPtr& planning_scene,
+                                                  const planning_interface::MotionPlanRequest &req,
+                                                  moveit_msgs::MoveItErrorCodes &error_code) const;
+
   ModelBasedPlanningContextPtr getPlanningContext(const std::string &config, const std::string &factory_type = "") const;
 
   ModelBasedPlanningContextPtr getLastPlanningContext() const
   {
-    return context_manager_.getLastPlanningContext();    
+    return context_manager_.getLastPlanningContext();
   }
-  
+
   const PlanningContextManager& getPlanningContextManager() const
   {
     return context_manager_;
   }
-  
+
   PlanningContextManager& getPlanningContextManager()
   {
     return context_manager_;
@@ -124,12 +123,17 @@ public:
   {
     return *constraint_sampler_manager_;
   }
-  
+
+  const constraint_samplers::ConstraintSamplerManager& getConstraintSamplerManager() const
+  {
+    return *constraint_sampler_manager_;
+  }
+
   void useConstraintsApproximations(bool flag)
   {
     use_constraints_approximations_ = flag;
   }
-  
+
   bool isUsingConstraintsApproximations() const
   {
     return use_constraints_approximations_;
@@ -138,59 +142,61 @@ public:
   void loadConstraintApproximations(const std::string &path);
 
   void saveConstraintApproximations(const std::string &path);
-  
+
+  bool simplifySolutions() const
+  {
+    return simplify_solutions_;
+  }
+
   void simplifySolutions(bool flag)
   {
     simplify_solutions_ = true;
   }
-  
+
   /** @brief Look up param server 'constraint_approximations' and use its value as the path to save constraint approximations to */
   bool saveConstraintApproximations();
-  
+
   /** @brief Look up param server 'constraint_approximations' and use its value as the path to load constraint approximations to */
   bool loadConstraintApproximations();
-  
+
   /** @brief Print the status of this node*/
   void printStatus();
 
 protected:
 
-  /** @brief Configure everything using the param server */
-  void loadParams();
-  
   /** @brief Configure the planners*/
   void loadPlannerConfigurations();
-  
+
   /** @brief Load the additional plugins for sampling constraints */
   void loadConstraintSamplers();
-  
-  void configureConstraints(const ModelBasedPlanningContextPtr &context) const;
-  
+
+  void configureContext(const ModelBasedPlanningContextPtr &context) const;
+
   /** \brief Configure the OMPL planning context for a new planning request */
   ModelBasedPlanningContextPtr prepareForSolve(const planning_interface::MotionPlanRequest &req,
-                                               const planning_scene::PlanningSceneConstPtr& planning_scene, 
+                                               const planning_scene::PlanningSceneConstPtr& planning_scene,
                                                moveit_msgs::MoveItErrorCodes *error_code,
                                                unsigned int *attempts, double *timeout) const;
-  	
-  
+
+
   ros::NodeHandle nh_; /// The ROS node handle
 
   /** \brief The kinematic model for which motion plans are computed */
   robot_model::RobotModelConstPtr kmodel_;
-  
+
   constraint_samplers::ConstraintSamplerManagerPtr constraint_sampler_manager_;
-  
+
   PlanningContextManager context_manager_;
-  
-  ConstraintsLibraryPtr constraints_library_;  
+
+  ConstraintsLibraryPtr constraints_library_;
   bool use_constraints_approximations_;
 
   bool simplify_solutions_;
 
 private:
-      
+
   constraint_sampler_manager_loader::ConstraintSamplerManagerLoaderPtr constraint_sampler_manager_loader_;
-  
+
 };
 
 }
