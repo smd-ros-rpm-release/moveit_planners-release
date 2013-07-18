@@ -39,7 +39,7 @@
 
 ompl_interface::ProjectionEvaluatorLinkPose::ProjectionEvaluatorLinkPose(const ModelBasedPlanningContext *pc, const std::string &link) :
   ompl::base::ProjectionEvaluator(pc->getOMPLStateSpace()), planning_context_(pc),
-  group_name_(planning_context_->getJointModelGroupName()), link_name_(link),
+  group_name_(planning_context_->getGroupName()), link_name_(link),
   tss_(planning_context_->getCompleteInitialRobotState())
 {
 }
@@ -61,7 +61,7 @@ void ompl_interface::ProjectionEvaluatorLinkPose::project(const ompl::base::Stat
 {
   robot_state::RobotState *s = tss_.getStateStorage();
   planning_context_->getOMPLStateSpace()->copyToRobotState(*s, state);
-  
+
   const robot_state::LinkState *ls = s->getLinkState(link_name_);
   const Eigen::Vector3d &o = ls->getGlobalLinkTransform().translation();
   projection(0) = o.x();
