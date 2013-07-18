@@ -1,3 +1,24 @@
+## moveit_planners - 0.4.2-0
+
+User `isucan@e6400` released the packages in the `moveit_planners` repository by running `/usr/local/bin/bloom-release --track groovy --ros-distro groovy moveit_planners` on `Thu, 18 Jul 2013 08:36:47 -0000`
+
+These packages were released:
+- `moveit_planners`
+- `moveit_planners_ompl`
+
+Version of package(s) in repository `moveit_planners`:
+- rosdistro version: `0.4.1-0`
+- old version: `0.4.1-0`
+- new version: `0.4.2-0`
+
+Versions of tools used:
+- bloom version: `0.4.2`
+- catkin_pkg version: `0.1.18`
+- rosdep version: `0.10.20`
+- rosdistro version: `0.2.12`
+- vcstools version: `0.1.31`
+
+
 ## moveit_planners - 0.5.0-0
 
 User `isucan@e6400` released the packages in the `moveit_planners` repository by running `/usr/local/bin/bloom-release --track hydro --ros-distro hydro -e moveit_planners` on `Mon, 15 Jul 2013 08:24:16 -0000`
