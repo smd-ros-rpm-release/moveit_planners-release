@@ -14,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of the Willow Garage nor the names of its
+ *   * Neither the name of Willow Garage nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -499,7 +499,7 @@ bool ompl_interface::ModelBasedPlanningContext::solve(planning_interface::Motion
 
 bool ompl_interface::ModelBasedPlanningContext::solve(double timeout, unsigned int count)
 {
-  moveit::Profiler::ScopedBlock sblock("PlanningContext:Solve");
+  moveit::tools::Profiler::ScopedBlock sblock("PlanningContext:Solve");
   ompl::time::point start = ompl::time::now();
   preSolve();
 
