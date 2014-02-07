@@ -1,3 +1,28 @@
+## moveit_planners - 0.5.4-0
+
+User `isucan@isucan-glaptop0` released the packages in the `moveit_planners` repository by running `/usr/bin/bloom-release -t hydro -r hydro moveit_planners` on `Fri, 07 Feb 2014 02:05:27 -0000`
+
+These packages were released:
+- `moveit_planners`
+- `moveit_planners_ompl`
+
+These packages were explicitly ignored:
+- `moveit_ompl_planners_core`
+- `moveit_ompl_planners_ros_plugin`
+
+Version of package(s) in repository `moveit_planners`:
+- rosdistro version: `0.5.3-0`
+- old version: `0.5.3-0`
+- new version: `0.5.4-0`
+
+Versions of tools used:
+- bloom version: `0.4.9`
+- catkin_pkg version: `0.1.25`
+- rosdep version: `0.10.25`
+- rosdistro version: `0.3.0`
+- vcstools version: `0.1.33`
+
+
 ## moveit_planners - 0.5.3-0
 
 User `isucan@e6400` released the packages in the `moveit_planners` repository by running `/usr/bin/bloom-release -t hydro -r hydro moveit_planners` on `Fri, 11 Oct 2013 13:07:48 -0000`
