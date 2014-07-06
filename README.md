@@ -1,3 +1,28 @@
+## moveit_planners (hydro) - 0.5.6-0
+
+The packages in the `moveit_planners` repository were released into the `hydro` distro by running `/usr/bin/bloom-release moveit_planners --track hydro --rosdistro hydro` on `Sun, 06 Jul 2014 21:01:25 -0000`
+
+These packages were released:
+- `moveit_planners`
+- `moveit_planners_ompl`
+
+These packages were explicitly ignored:
+- `moveit_ompl_planners_core`
+- `moveit_ompl_planners_ros_plugin`
+
+Version of package(s) in repository `moveit_planners`:
+- rosdistro version: `0.5.4-0`
+- old version: `0.5.4-0`
+- new version: `0.5.6-0`
+
+Versions of tools used:
+- bloom version: `0.5.10`
+- catkin_pkg version: `0.2.2`
+- rosdep version: `0.10.27`
+- rosdistro version: `0.3.5`
+- vcstools version: `0.1.35`
+
+
 ## moveit_planners (indigo) - 0.6.6-0
 
 The packages in the `moveit_planners` repository were released into the `indigo` distro by running `/usr/bin/bloom-release moveit_planners --track indigo --rosdistro indigo --edit` on `Sun, 06 Jul 2014 20:50:13 -0000`
