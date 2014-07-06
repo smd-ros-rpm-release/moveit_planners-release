@@ -1,3 +1,24 @@
+## moveit_planners (indigo) - 0.6.6-0
+
+The packages in the `moveit_planners` repository were released into the `indigo` distro by running `/usr/bin/bloom-release moveit_planners --track indigo --rosdistro indigo --edit` on `Sun, 06 Jul 2014 20:50:13 -0000`
+
+These packages were released:
+- `moveit_planners`
+- `moveit_planners_ompl`
+
+Version of package(s) in repository `moveit_planners`:
+- rosdistro version: `0.5.5-1`
+- old version: `0.5.5-1`
+- new version: `0.6.6-0`
+
+Versions of tools used:
+- bloom version: `0.5.10`
+- catkin_pkg version: `0.2.2`
+- rosdep version: `0.10.27`
+- rosdistro version: `0.3.5`
+- vcstools version: `0.1.35`
+
+
 ## moveit_planners (indigo) - 0.5.5-1
 
 The packages in the `moveit_planners` repository were released into the `indigo` distro by running `/usr/bin/bloom-release -r indigo -t indigo moveit_planners` on `Wed, 21 May 2014 05:03:22 -0000`
