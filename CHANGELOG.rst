@@ -2,6 +2,19 @@
 Changelog for package moveit_planners_ompl
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.6 (2014-07-06)
+------------------
+* Fix for getMeasure() virtual function OMPL change
+* Move OMPL paths before catkin to avoid compilation against ROS OMPL package when specifying a different OMPL installation
+* Fixed bug which limited the number of plans considered to the number of threads.
+* Contributors: Chris Lewis, Dave Coleman, Ryan Luna
+
+0.5.5 (2014-03-22)
+------------------
+* update build system for ROS indigo
+* Removed duplicate call to setPlanningScene(), added various comments
+* Contributors: Dave Coleman, Ioan Sucan
+
 0.5.4 (2014-02-06)
 ------------------
 * fix segfault when multiple goals are passed to move_group
