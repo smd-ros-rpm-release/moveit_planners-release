@@ -2,12 +2,27 @@
 Changelog for package moveit_planners_ompl
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.5.6 (2014-07-06)
+0.6.7 (2014-10-28)
 ------------------
+* Changed OMPL SimpleSetup member variable to shared pointer, passed MotionPlanningRequest to child function
+* Simplified number of solve() entry points in moveit_planners_ompl
+* Fixed uninitialized ptc_ pointer causing a crash.
+* renamed newGoal to new_goal for keeping with formatting
+* setting GroupStateValidityCallbackFn member for constraint_sampler member and implementing callbacks for state validity checking
+* added functions to check validit of state, and also to act as callback for constraint sampler
+* Added copy function from MoveIt! robot_state joint values to ompl state
+* fix for demo constraints database linking error
+* Namespaced less useful debug output to allow to be easily silenced using ros console
+* Contributors: Dave Coleman, Dave Hershberger, Sachin Chitta, arjungm
+
+0.6.6 (2014-07-06)
+------------------
+* indigo version of moveit planners
+* fix compile error on Indigo
 * Fix for getMeasure() virtual function OMPL change
 * Move OMPL paths before catkin to avoid compilation against ROS OMPL package when specifying a different OMPL installation
 * Fixed bug which limited the number of plans considered to the number of threads.
-* Contributors: Chris Lewis, Dave Coleman, Ryan Luna
+* Contributors: Alexander Stumpf, Chris Lewis, Dave Coleman, Ryan Luna, Sachin Chitta
 
 0.5.5 (2014-03-22)
 ------------------
